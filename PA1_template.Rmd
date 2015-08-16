@@ -7,45 +7,56 @@ output:
 
 
 ## Loading and preprocessing the data
-
+```{r}
+library(ggplot2)
+library(data.table)
+library(lattice)
 unzip("activity.zip")
 activitydata <- read.csv("activity.csv")
 #clean data
 good <- complete.cases(activitydata)
 cleandata <- activitydata[good, ]
+```
 
 
 ## What is mean total number of steps taken per day?
+```{r}
 # generate total number of steps per day
 StepsbyDate <- aggregate(steps ~ date, data = cleandata, sum)
 StepsbyDate$date <- as.Date(StepsbyDate$date)
-png("Totalstepperday.png")
+```
+```{r, echo=FALSE}
 ggplot(aes(x=StepsbyDate$date, y=StepsbyDate$steps), data = StepsbyDate) + 
         geom_bar(stat = 'identity', position = 'dodge') +
         labs(title="Total steps per day", x=("Date"), y=("Total Steps"))
-dev.off()
-png("histofTotalstepsClean.png")
+```
+```{r, echo=FALSE}
 hist(StepsbyDate$steps)
-dev.off()
+```
+```{r}
 # generate mean number of steps per day
 meansteps <- round(mean(StepsbyDate$steps))
 sprintf("The mean of total number of steps taken per day: %s", meansteps)
 # generate median number of steps per day
 mediansteps <-median(StepsbyDate$steps)
 sprintf("The median of total number of steps taken per day: %s", mediansteps)
-
+```
 
 ## What is the average daily activity pattern?
+```{r}
 # generate steps~interval relations
 Interval <- aggregate(steps ~ interval, data = cleandata, mean)
-png("Interval1.png")
+```
+```{r, echo=FALSE}
 plot(steps ~ interval, data=Interval, type="l")
-dev.off()
+```
+```{r}
 #calculate average of the maximun number of steps
 AverageMaxsteps <- Interval[which.max(Interval$steps),]
 sprintf("average across all maximum number of steps: %s", AverageMaxsteps$steps)
-
+```
 ## Imputing missing values
+```{r}
 #calculate number of missing data
 missingdata <- sum(is.na(activitydata$steps))
 sprintf("%s number of inputs are missing", missingdata)
@@ -61,22 +72,26 @@ for(i in 1:nrow(datafilled)){
        
 # recalculate the total steps
 Totalfilled <- aggregate(steps ~ date, data = datafilled, sum) 
-
-png("histTotalfilled.png")
+```
+```{r, echo=FALSE}
 hist(Totalfilled$steps)
-dev.off()
+```
+```{r}
 # recalculate the mean and median steps
 meansteps2 <- round(mean(Totalfilled$steps))
 sprintf("The mean of total number of steps taken per day: %s", meansteps2)
 mediansteps2 <-median(Totalfilled$steps)
 sprintf("The median of total number of steps taken per day: %s", mediansteps2)
-
+```
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r}
 # seperate weekend and wekday
 datafilled$day = ifelse(as.POSIXlt(as.Date(datafilled$date))$wday%%6 == 0, "weekend", "weekday")
 Interval2 = aggregate(steps ~ interval + day, datafilled, mean)
 datafilled$day = factor(datafilled$day, levels = c("weekday", "weekend"))
-png("IntervalbyWeekdayWeekend.png")
+```
+```{r, echo=FALSE}
 xyplot(steps ~ interval | factor(day), data = Interval2, aspect = 1/2, 
        type = "l")
-dev.off()
+
+```
